@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MediaPipe Pose Diagnostic Test</title>
+    <style>
+        body { margin: 0; background: #111; color: #0f0; font-family: monospace; }
+        #container { position: relative; width: 640px; height: 480px; margin: 20px auto; }
+        video { position: absolute; top: 0; left: 0; width: 640px; height: 480px; transform: scaleX(-1); }
+        canvas { position: absolute; top: 0; left: 0; width: 640px; height: 480px; transform: scaleX(-1); z-index: 10; }
+        #log { margin: 20px; padding: 10px; background: #222; max-height: 300px; overflow-y: auto; white-space: pre-wrap; font-size: 12px; }
+        h1 { text-align: center; color: #0f0; }
+        .status { text-align: center; font-size: 24px; margin: 10px; }
+        .ok { color: #0f0; }
+        .fail { color: #f00; }
+        .pending { color: #ff0; }
+    </style>
+</head>
+<body>
+    <h1>🧪 MediaPipe Pose Diagnostic Test</h1>
+    <div class="status" id="status">⏳ Loading...</div>
+    <div id="container">
+        <video id="video" autoplay playsinline muted></video>
+        <canvas id="canvas" width="640" height="480"></canvas>
+    </div>
+    <div id="log"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js" crossorigin="anonymous"></script>
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const logEl = document.getElementById('log');
+        const statusEl = document.getElementById('status');
+        let frameCount = 0;
+        let landmarkCount = 0;
+
+        function log(msg) {
+            const line = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            console.log(line);
+            logEl.textContent = line + '\n' + logEl.textContent;
+        }
+
+        const CONNECTIONS = [
+            [11, 12], [11, 23], [12, 24], [23, 24],
+            [11, 13], [13, 15], [12, 14], [14, 16],
+            [23, 25], [25, 27], [24, 26], [26, 28],
+            [15, 17], [15, 19], [16, 18], [16, 20],
+            [0, 1], [1, 2], [2, 3], [3, 7],
+            [0, 4], [4, 5], [5, 6], [6, 8]
+        ];
+
+        function drawResults(landmarks) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (!landmarks) return;
+
+            // Draw bones
+            ctx.lineWidth = 4;
+            CONNECTIONS.forEach(([i, j]) => {
+                const a = landmarks[i];
+                const b = landmarks[j];
+                if (a && b && a.visibility > 0.3 && b.visibility > 0.3) {
+                    ctx.strokeStyle = `rgba(0, 255, 128, ${Math.min(a.visibility, b.visibility)})`;
+                    ctx.beginPath();
+                    ctx.moveTo(a.x * canvas.width, a.y * canvas.height);
+                    ctx.lineTo(b.x * canvas.width, b.y * canvas.height);
+                    ctx.stroke();
+                }
+            });
+
+            // Draw joints
+            landmarks.forEach((lm, i) => {
+                if (lm.visibility > 0.3) {
+                    const x = lm.x * canvas.width;
+                    const y = lm.y * canvas.height;
+                    const r = [11,12,13,14,15,16,23,24,25,26,27,28].includes(i) ? 8 : 4;
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, r, 0, Math.PI * 2);
+                    ctx.fillStyle = [11,12,13,14,15,16].includes(i) ? '#00ff88' : '#00aaff';
+                    ctx.fill();
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            });
+
+            // Draw status text on canvas
+            ctx.fillStyle = '#0f0';
+            ctx.font = 'bold 16px monospace';
+            ctx.fillText(`Frames: ${frameCount} | Detections: ${landmarkCount}`, 10, 25);
+        }
+
+        async function main() {
+            log('Step 1: Checking MediaPipe Pose global...');
+            if (typeof Pose === 'undefined') {
+                log('❌ FAIL: window.Pose is undefined. CDN script did not load.');
+                statusEl.textContent = '❌ MediaPipe failed to load';
+                statusEl.className = 'status fail';
+                return;
+            }
+            log('✅ window.Pose found');
+
+            log('Step 2: Creating Pose instance...');
+            const pose = new Pose({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${file}`
+            });
+
+            pose.setOptions({
+                modelComplexity: 1,
+                smoothLandmarks: true,
+                enableSegmentation: false,
+                smoothSegmentation: false,
+                minDetectionConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            });
+
+            pose.onResults((results) => {
+                landmarkCount++;
+                if (results.poseLandmarks) {
+                    drawResults(results.poseLandmarks);
+                    if (landmarkCount === 1) {
+                        log(`✅ FIRST LANDMARKS RECEIVED! ${results.poseLandmarks.length} joints detected.`);
+                        statusEl.textContent = '✅ POSE DETECTION WORKING!';
+                        statusEl.className = 'status ok';
+                    }
+                    if (landmarkCount % 30 === 0) {
+                        const lsh = results.poseLandmarks[11];
+                        log(`Frame ${landmarkCount}: L_Shoulder=(${lsh.x.toFixed(3)}, ${lsh.y.toFixed(3)}) vis=${lsh.visibility.toFixed(2)}`);
+                    }
+                } else {
+                    log(`Frame ${landmarkCount}: No landmarks detected (person not in view?)`);
+                }
+            });
+
+            log('Step 3: Getting camera...');
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 640, height: 480, facingMode: 'user' }
+                });
+                video.srcObject = stream;
+                log('✅ Camera stream acquired');
+            } catch (e) {
+                log(`❌ Camera failed: ${e.message}`);
+                statusEl.textContent = '❌ Camera access denied';
+                statusEl.className = 'status fail';
+                return;
+            }
+
+            // Wait for video to be ready
+            await new Promise((resolve) => {
+                if (video.readyState >= 2) resolve();
+                else video.onloadeddata = resolve;
+            });
+            await video.play();
+            video.width = video.videoWidth;
+            video.height = video.videoHeight;
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            log(`✅ Video playing: ${video.videoWidth}x${video.videoHeight}`);
+
+            log('Step 4: Sending first frame to MediaPipe...');
+            statusEl.textContent = '⏳ Waiting for first detection...';
+            statusEl.className = 'status pending';
+
+            // Frame loop
+            async function loop() {
+                if (video.readyState >= 2) {
+                    frameCount++;
+                    try {
+                        await pose.send({ image: video });
+                    } catch (e) {
+                        if (frameCount <= 3) log(`⚠️ pose.send error: ${e.message}`);
+                    }
+                }
+                requestAnimationFrame(loop);
+            }
+            loop();
+        }
+
+        main().catch(e => {
+            log(`❌ Fatal error: ${e.message}`);
+            statusEl.textContent = '❌ Fatal error';
+            statusEl.className = 'status fail';
+        });
+    </script>
+</body>
+</html>

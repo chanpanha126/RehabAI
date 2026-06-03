@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="RehabAI - AI-powered rehabilitation game platform for stroke and hemiplegia recovery using real-time pose tracking and gamification.">
+    <title>RehabAI Coach – Rehabilitation Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- ===== WELCOME SCREEN ===== -->
+    <section id="screen-welcome" class="screen active">
+        <div class="welcome-container">
+            <div class="welcome-logo">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 80 80" width="80" height="80">
+                        <defs>
+                            <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#00d4aa" />
+                                <stop offset="100%" style="stop-color:#0099ff" />
+                            </linearGradient>
+                        </defs>
+                        <circle cx="40" cy="18" r="8" fill="url(#logoGrad)" />
+                        <line x1="40" y1="26" x2="40" y2="52" stroke="url(#logoGrad)" stroke-width="3"
+                            stroke-linecap="round" />
+                        <line x1="40" y1="34" x2="24" y2="44" stroke="url(#logoGrad)" stroke-width="3"
+                            stroke-linecap="round" />
+                        <line x1="40" y1="34" x2="56" y2="28" stroke="url(#logoGrad)" stroke-width="3"
+                            stroke-linecap="round" />
+                        <line x1="40" y1="52" x2="28" y2="68" stroke="url(#logoGrad)" stroke-width="3"
+                            stroke-linecap="round" />
+                        <line x1="40" y1="52" x2="52" y2="68" stroke="url(#logoGrad)" stroke-width="3"
+                            stroke-linecap="round" />
+                        <circle cx="56" cy="28" r="4" fill="#00d4aa" opacity="0.6" />
+                    </svg>
+                </div>
+                <h1>RehabAI</h1>
+                <p class="subtitle">AI-Powered Rehabilitation Coach</p>
+            </div>
+
+            <div class="welcome-stats glass-card" id="welcome-stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="stat-streak">0</span>
+                    <span class="stat-label">Day Streak 🔥</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="stat-total-reps">0</span>
+                    <span class="stat-label">Total Reps</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="stat-sessions">0</span>
+                    <span class="stat-label">Sessions</span>
+                </div>
+            </div>
+
+            <div class="welcome-actions">
+                <button id="btn-start" class="btn btn-primary btn-xl pulse-glow">
+                    <span class="btn-icon">🏋️</span>
+                    Start Exercising
+                </button>
+                <button id="btn-dashboard" class="btn btn-secondary btn-lg">
+                    <span class="btn-icon">📊</span>
+                    View Progress
+                </button>
+            </div>
+
+            <p class="welcome-tagline">Designed for stroke & hemiplegia recovery</p>
+        </div>
+    </section>
+
+    <!-- ===== EXERCISE SELECTOR SCREEN ===== -->
+    <section id="screen-select" class="screen">
+        <div class="select-container">
+            <div class="screen-header">
+                <button id="btn-back-welcome" class="btn btn-icon-only btn-back" aria-label="Go back">
+                    <span>←</span>
+                </button>
+                <h2>Choose Your Exercise</h2>
+                <p class="header-subtitle">Select a rehabilitation exercise to begin</p>
+            </div>
+
+            <div class="exercise-grid" id="exercise-grid">
+                <!-- Exercise cards injected by JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== TUTORIAL SCREEN ===== -->
+    <section id="screen-tutorial" class="screen">
+        <div class="tutorial-container">
+            <div class="screen-header">
+                <button id="btn-back-select" class="btn btn-icon-only btn-back" aria-label="Go back">
+                    <span>←</span>
+                </button>
+                <h2>How to Play</h2>
+            </div>
+
+            <div class="tutorial-card glass-card">
+                <div class="tutorial-icon" id="tutorial-icon">💪</div>
+                <h3 id="tutorial-title">Exercise Name</h3>
+
+                <div class="tutorial-instructions">
+                    <p id="tutorial-desc" class="tutorial-main-text">Description goes here.</p>
+                    <ul class="tutorial-tips">
+                        <li>✔️ Match the glowing blue ghost skeleton.</li>
+                        <li>✔️ Move smoothly and slowly.</li>
+                        <li>✔️ Hold the position for 3 seconds when prompted.</li>
+                    </ul>
+                </div>
+
+                <button id="btn-start-game" class="btn btn-primary btn-xl pulse-glow"
+                    style="margin-top: 24px; width: 100%;">
+                    I'm Ready!
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== GAME SESSION SCREEN ===== -->
+    <section id="screen-game" class="screen">
+        <div class="game-container">
+            <!-- Top HUD -->
+            <div class="game-hud-top">
+                <button id="btn-quit-game" class="btn btn-icon-only btn-quit" aria-label="Quit exercise">✕</button>
+                <div class="exercise-name-badge" id="game-exercise-name">Exercise</div>
+                <div class="difficulty-badge" id="game-difficulty">Easy</div>
+            </div>
+
+            <!-- Camera + Canvas Area -->
+            <div class="camera-viewport" id="camera-viewport">
+                <video id="webcam" autoplay playsinline muted></video>
+                <canvas id="skeleton-canvas"></canvas>
+
+                <!-- Countdown Overlay -->
+                <div class="countdown-overlay" id="countdown-overlay">
+                    <div class="countdown-number" id="countdown-number">3</div>
+                    <div class="countdown-text">Get Ready!</div>
+                </div>
+
+                <!-- Feedback Overlay -->
+                <div class="feedback-overlay" id="feedback-overlay">
+                    <div class="feedback-text" id="feedback-text"></div>
+                </div>
+
+                <!-- Rep popup -->
+                <div class="rep-popup" id="rep-popup">
+                    <span class="rep-popup-text" id="rep-popup-text">+85</span>
+                </div>
+
+                <!-- Circular Progress & Hold Timer Overlay -->
+                <div class="center-game-ui">
+                    <div class="circular-progress" id="circular-progress">
+                        <svg viewBox="0 0 100 100">
+                            <circle class="progress-bg" cx="50" cy="50" r="45"></circle>
+                            <circle class="progress-ring" id="progress-ring" cx="50" cy="50" r="45"></circle>
+                        </svg>
+                        <div class="hold-timer hidden" id="hold-timer">3</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom HUD -->
+            <div class="game-hud-bottom">
+                <div class="hud-section">
+                    <div class="hud-label">Reps</div>
+                    <div class="hud-value" id="hud-reps">0 / 10</div>
+                </div>
+                <div class="hud-section hud-score-section">
+                    <div class="hud-label">Score</div>
+                    <div class="hud-value hud-score" id="hud-score">0</div>
+                    <div class="combo-badge hidden" id="combo-badge">×1</div>
+                </div>
+                <div class="hud-section">
+                    <div class="hud-label">Accuracy</div>
+                    <div class="hud-value" id="hud-accuracy">--%</div>
+                </div>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="game-progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+            </div>
+
+            <!-- Form quality bar -->
+            <div class="form-quality-bar" id="form-quality-bar">
+                <div class="form-quality-fill" id="form-quality-fill" style="width: 50%"></div>
+                <span class="form-quality-label" id="form-quality-label">Form</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== RESULTS SCREEN ===== -->
+    <section id="screen-results" class="screen">
+        <div class="results-container">
+            <div class="results-header">
+                <h2>Session Complete! 🎉</h2>
+            </div>
+
+            <div class="results-stars" id="results-stars">
+                <span class="star">☆</span><span class="star">☆</span><span class="star">☆</span>
+            </div>
+
+            <div class="results-score-big" id="results-score">0</div>
+            <div class="results-label">Total Score</div>
+
+            <div class="results-stats glass-card">
+                <div class="result-stat">
+                    <span class="result-stat-icon">🔄</span>
+                    <span class="result-stat-value" id="result-reps">0</span>
+                    <span class="result-stat-label">Reps Completed</span>
+                </div>
+                <div class="result-stat">
+                    <span class="result-stat-icon">🎯</span>
+                    <span class="result-stat-value" id="result-accuracy">0%</span>
+                    <span class="result-stat-label">Avg Accuracy</span>
+                </div>
+                <div class="result-stat">
+                    <span class="result-stat-icon">⚡</span>
+                    <span class="result-stat-value" id="result-best-combo">×1</span>
+                    <span class="result-stat-label">Best Combo</span>
+                </div>
+                <div class="result-stat">
+                    <span class="result-stat-icon">⏱️</span>
+                    <span class="result-stat-value" id="result-duration">0s</span>
+                    <span class="result-stat-label">Duration</span>
+                </div>
+            </div>
+
+            <div class="results-actions">
+                <button id="btn-retry" class="btn btn-primary btn-lg">
+                    <span class="btn-icon">🔄</span> Try Again
+                </button>
+                <button id="btn-new-exercise" class="btn btn-secondary btn-lg">
+                    <span class="btn-icon">📋</span> New Exercise
+                </button>
+                <button id="btn-results-home" class="btn btn-ghost btn-lg">
+                    <span class="btn-icon">🏠</span> Home
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== DASHBOARD SCREEN ===== -->
+    <section id="screen-dashboard" class="screen">
+        <div class="dashboard-container">
+            <div class="screen-header">
+                <button id="btn-back-dash" class="btn btn-icon-only btn-back" aria-label="Go back">
+                    <span>←</span>
+                </button>
+                <h2>Your Progress</h2>
+                <p class="header-subtitle">Recovery journey tracking</p>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="dash-card glass-card">
+                    <h3>🔥 Daily Streak</h3>
+                    <div class="dash-big-number" id="dash-streak">0 days</div>
+                </div>
+                <div class="dash-card glass-card">
+                    <h3>💪 Total Reps</h3>
+                    <div class="dash-big-number" id="dash-total-reps">0</div>
+                </div>
+                <div class="dash-card glass-card">
+                    <h3>📈 Best Score</h3>
+                    <div class="dash-big-number" id="dash-best-score">0</div>
+                </div>
+                <div class="dash-card glass-card">
+                    <h3>🎯 Avg Accuracy</h3>
+                    <div class="dash-big-number" id="dash-avg-accuracy">--%</div>
+                </div>
+            </div>
+
+            <div class="dash-card glass-card dash-chart-card">
+                <h3>📊 Accuracy Trend</h3>
+                <canvas id="chart-accuracy" width="700" height="200"></canvas>
+            </div>
+
+            <div class="dash-card glass-card dash-chart-card">
+                <h3>🏋️ Exercise History</h3>
+                <canvas id="chart-exercises" width="700" height="200"></canvas>
+            </div>
+
+            <div class="dash-card glass-card">
+                <h3>📅 Recent Sessions</h3>
+                <div class="session-list" id="session-list">
+                    <p class="empty-state">No sessions yet. Start exercising!</p>
+                </div>
+            </div>
+
+            <div class="dash-actions">
+                <button id="btn-clear-data" class="btn btn-ghost btn-sm">Clear All Data</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== AUDIO TOGGLE (floating) ===== -->
+    <button id="btn-audio-toggle" class="btn-audio-toggle" aria-label="Toggle audio">
+        🔊
+    </button>
+
+    <!-- MediaPipe Pose CDN (pinned version) -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js" crossorigin="anonymous"></script>
+
+    <!-- App entry point -->
+    <script type="module" src="app.js"></script>
+</body>
+
+</html>
