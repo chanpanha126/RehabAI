@@ -1,10 +1,10 @@
-# RehabAI 🏋️🤖
+# RehabAI 
 
 RehabAI is an AI-powered rehabilitation platform using real-time computer vision and gamification, specifically designed to assist with stroke and hemiplegia recovery. The platform tracks patient movements in real-time, guides them through targeted physical therapy exercises, and evaluates their form using custom machine learning models running entirely on the client side.
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
 - **Real-Time Pose Tracking**: Utilizes **MediaPipe Pose** directly in the browser to track joint coordinates without requiring any external hardware besides a standard webcam.
 - **Client-Side ML Inference**: Features 9 separate **XGBoost classifiers** exported to raw JavaScript using **m2cgen**. This enables zero-latency model inference directly in the browser, completely removing the need for an external GPU server or cloud API endpoints.
@@ -17,7 +17,7 @@ RehabAI is an AI-powered rehabilitation platform using real-time computer vision
 
 ---
 
-## 🏃 Supported Rehabilitation Exercises
+## Supported Rehabilitation Exercises
 
 RehabAI evaluates movements for 9 distinct rehabilitation gesture types:
 
@@ -35,7 +35,7 @@ RehabAI evaluates movements for 9 distinct rehabilitation gesture types:
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 RehabAI/
@@ -64,7 +64,7 @@ RehabAI/
 
 ---
 
-## 🛠️ Installation & Setup
+## Installation & Setup
 
 ### 1. Run the Web Application
 The frontend requires no compiler or build steps. However, due to browser security restrictions on webcam feeds and ES Modules, you must run it through a local web server:
@@ -101,7 +101,7 @@ If you wish to re-train the models on your custom `data.csv`:
 
 ---
 
-## 🤖 How the Machine Learning Works
+## How the Machine Learning Works
 
 Instead of using resource-intensive deep learning models on the frontend, RehabAI uses a hybrid pipeline:
 1. **Pose Landmark Extraction**: MediaPipe Pose runs inside the browser, transforming the raw image pixels from the webcam into 33 3D coordinate landmarks.
