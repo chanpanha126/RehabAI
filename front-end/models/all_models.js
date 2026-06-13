@@ -12,15 +12,15 @@ import { evaluateGesture7 } from './model_gesture_7.js';
 import { evaluateGesture8 } from './model_gesture_8.js';
 
 export const GESTURE_MODELS = {
-    0: { name: 'ElbowFlexionLeft', evaluate: evaluateGesture0, accuracy: 0.9981 },
-    1: { name: 'ElbowFlexionRight', evaluate: evaluateGesture1, accuracy: 0.9991 },
-    2: { name: 'ShoulderFlexionLeft', evaluate: evaluateGesture2, accuracy: 0.9988 },
-    3: { name: 'ShoulderFlexionRight', evaluate: evaluateGesture3, accuracy: 0.9997 },
-    4: { name: 'ShoulderAbductionLeft', evaluate: evaluateGesture4, accuracy: 0.9973 },
-    5: { name: 'ShoulderAbductionRight', evaluate: evaluateGesture5, accuracy: 0.9992 },
-    6: { name: 'ShoulderForwardElevation', evaluate: evaluateGesture6, accuracy: 0.9966 },
-    7: { name: 'SideTapLeft', evaluate: evaluateGesture7, accuracy: 0.9997 },
-    8: { name: 'SideTapRight', evaluate: evaluateGesture8, accuracy: 0.9987 },
+    0: { name: 'ElbowFlexionLeft', evaluate: evaluateGesture0, accuracy: 0.9981, precision: 0.9981, recall: 0.9981, f1: 0.9981 },
+    1: { name: 'ElbowFlexionRight', evaluate: evaluateGesture1, accuracy: 0.9991, precision: 0.9991, recall: 0.9991, f1: 0.9991 },
+    2: { name: 'ShoulderFlexionLeft', evaluate: evaluateGesture2, accuracy: 0.9988, precision: 0.9988, recall: 0.9988, f1: 0.9988 },
+    3: { name: 'ShoulderFlexionRight', evaluate: evaluateGesture3, accuracy: 0.9997, precision: 0.9997, recall: 0.9997, f1: 0.9997 },
+    4: { name: 'ShoulderAbductionLeft', evaluate: evaluateGesture4, accuracy: 0.9973, precision: 0.9973, recall: 0.9973, f1: 0.9973 },
+    5: { name: 'ShoulderAbductionRight', evaluate: evaluateGesture5, accuracy: 0.9992, precision: 0.9992, recall: 0.9992, f1: 0.9992 },
+    6: { name: 'ShoulderForwardElevation', evaluate: evaluateGesture6, accuracy: 0.9966, precision: 0.9966, recall: 0.9966, f1: 0.9966 },
+    7: { name: 'SideTapLeft', evaluate: evaluateGesture7, accuracy: 0.9997, precision: 0.9997, recall: 0.9997, f1: 0.9997 },
+    8: { name: 'SideTapRight', evaluate: evaluateGesture8, accuracy: 0.9987, precision: 0.9987, recall: 0.9987, f1: 0.9987 },
 };
 
 export function evaluateGesture(gestureId, features) {

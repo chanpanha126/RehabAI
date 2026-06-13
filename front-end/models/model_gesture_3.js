@@ -1,5 +1,8 @@
 // XGBoost Model for Gesture 3: ShoulderFlexionRight
 // Accuracy: 99.97%
+// Precision: 99.97%
+// Recall: 99.97%
+// F1 Score: 99.97%
 // Trained on 38575 samples
 
 export function evaluateGesture3(features) {

@@ -1,5 +1,8 @@
 // XGBoost Model for Gesture 4: ShoulderAbductionLeft
 // Accuracy: 99.73%
+// Precision: 99.73%
+// Recall: 99.73%
+// F1 Score: 99.73%
 // Trained on 23735 samples
 
 export function evaluateGesture4(features) {

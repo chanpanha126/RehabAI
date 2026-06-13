@@ -5,7 +5,9 @@ import pandas as pd
 import xgboost as xgb
 import m2cgen as m2c
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
 import os
 
 def train_all_models(csv_file, output_dir):
@@ -60,12 +62,35 @@ def train_all_models(csv_file, output_dir):
         model.fit(X_train, y_train)
         
         y_pred = model.predict(X_test)
+        
+        # Calculate metrics
         accuracy = accuracy_score(y_test, y_pred)
-        print(f"  Accuracy: {accuracy*100:.2f}%")
+        precision = precision_score(y_test, y_pred, average='weighted', zero_division=0)
+        recall = recall_score(y_test, y_pred, average='weighted', zero_division=0)
+        f1 = f1_score(y_test, y_pred, average='weighted', zero_division=0)
+        
+        print(f"  Accuracy:  {accuracy*100:.2f}%")
+        print(f"  Precision: {precision*100:.2f}%")
+        print(f"  Recall:    {recall*100:.2f}%")
+        print(f"  F1 Score:  {f1*100:.2f}%")
+        
+        # Generate Confusion Matrix Chart
+        cm = confusion_matrix(y_test, y_pred)
+        plt.figure(figsize=(5, 4))
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+        plt.title(f'Confusion Matrix: {name}')
+        plt.xlabel('Predicted Label')
+        plt.ylabel('True Label')
+        plt.tight_layout()
+        plt.savefig(os.path.join(output_dir, f'cm_gesture_{gesture_id}.png'))
+        plt.close()
         
         results[gesture_id] = {
             'name': name,
             'accuracy': accuracy,
+            'precision': precision,
+            'recall': recall,
+            'f1': f1,
             'samples': len(gesture_df)
         }
         
@@ -76,12 +101,35 @@ def train_all_models(csv_file, output_dir):
         with open(output_file, 'w') as f:
             f.write(f"// XGBoost Model for Gesture {gesture_id}: {name}\n")
             f.write(f"// Accuracy: {accuracy*100:.2f}%\n")
+            f.write(f"// Precision: {precision*100:.2f}%\n")
+            f.write(f"// Recall: {recall*100:.2f}%\n")
+            f.write(f"// F1 Score: {f1*100:.2f}%\n")
             f.write(f"// Trained on {len(gesture_df)} samples\n\n")
             f.write(f"export function evaluateGesture{gesture_id}(features) {{\n")
             f.write(js_code)
             f.write("\n    return score(features);\n}\n")
         
         print(f"  Exported to: {output_file}")
+    
+    # Generate Summary Metrics Chart
+    gesture_names_list = [results[gid]['name'] for gid in sorted(results.keys())]
+    acc_list = [results[gid]['accuracy'] for gid in sorted(results.keys())]
+    f1_list = [results[gid]['f1'] for gid in sorted(results.keys())]
+    
+    plt.figure(figsize=(12, 7))
+    x = range(len(gesture_names_list))
+    width = 0.35
+    plt.bar([i - width/2 for i in x], acc_list, width, label='Accuracy', color='skyblue')
+    plt.bar([i + width/2 for i in x], f1_list, width, label='F1 Score', color='salmon')
+    plt.xlabel('Gesture Models')
+    plt.ylabel('Score (0 to 1)')
+    plt.title('Accuracy and F1 Score by Gesture Model')
+    plt.xticks(x, gesture_names_list, rotation=45, ha='right')
+    plt.legend(loc='lower right')
+    plt.ylim(0.95, 1.01) # zoom in since scores are high
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, 'metrics_summary.png'))
+    plt.close()
     
     # Create a combined loader module
     combined_file = os.path.join(output_dir, 'all_models.js')
@@ -95,7 +143,7 @@ def train_all_models(csv_file, output_dir):
         f.write("\nexport const GESTURE_MODELS = {\n")
         for gesture_id in sorted(results.keys()):
             info = results[gesture_id]
-            f.write(f"    {gesture_id}: {{ name: '{info['name']}', evaluate: evaluateGesture{gesture_id}, accuracy: {info['accuracy']:.4f} }},\n")
+            f.write(f"    {gesture_id}: {{ name: '{info['name']}', evaluate: evaluateGesture{gesture_id}, accuracy: {info['accuracy']:.4f}, precision: {info['precision']:.4f}, recall: {info['recall']:.4f}, f1: {info['f1']:.4f} }},\n")
         f.write("};\n\n")
         
         f.write("export function evaluateGesture(gestureId, features) {\n")
@@ -116,9 +164,9 @@ def train_all_models(csv_file, output_dir):
     print(f"{'='*60}")
     for gid in sorted(results.keys()):
         r = results[gid]
-        print(f"  Gesture {gid} ({r['name']}): {r['accuracy']*100:.2f}% accuracy ({r['samples']} samples)")
-    print(f"\nCombined loader: {combined_file}")
-
+        print(f"  Gesture {gid} ({r['name']}): Acc: {r['accuracy']*100:.2f}%, P: {r['precision']*100:.2f}%, R: {r['recall']*100:.2f}%, F1: {r['f1']*100:.2f}% ({r['samples']} samples)")
+    print(f"\nCharts saved in {output_dir}")
+    print(f"Combined loader: {combined_file}")
 
 if __name__ == '__main__':
     train_all_models('data.csv', 'front-end/models')

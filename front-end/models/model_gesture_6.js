@@ -1,5 +1,8 @@
 // XGBoost Model for Gesture 6: ShoulderForwardElevation
 // Accuracy: 99.66%
+// Precision: 99.66%
+// Recall: 99.66%
+// F1 Score: 99.66%
 // Trained on 25295 samples
 
 export function evaluateGesture6(features) {

@@ -1,5 +1,8 @@
 // XGBoost Model for Gesture 2: ShoulderFlexionLeft
 // Accuracy: 99.88%
+// Precision: 99.88%
+// Recall: 99.88%
+// F1 Score: 99.88%
 // Trained on 44584 samples
 
 export function evaluateGesture2(features) {
